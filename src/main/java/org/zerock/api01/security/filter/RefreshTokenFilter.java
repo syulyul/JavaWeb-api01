@@ -2,6 +2,7 @@ package org.zerock.api01.security.filter;
 
 import com.google.gson.Gson;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -53,6 +54,17 @@ public class RefreshTokenFilter extends OncePerRequestFilter {
             checkAccessToken(accessToken);
         }catch (RefreshTokenException refreshTokenException){
             refreshTokenException.sendResponseError(response);
+        }
+
+        Map<String, Object> refreshClaims = null;
+
+        try{
+
+            refreshClaims = checkRefreshToken(refreshToken);
+            log.info(refreshClaims);
+
+        }catch (RefreshTokenException refreshTokenException){
+            refreshTokenException.sendResponseError(response);
             return; //더이상 실행할 필요 없음
         }
 
@@ -80,6 +92,21 @@ public class RefreshTokenFilter extends OncePerRequestFilter {
         }catch (Exception exception){
             throw new RefreshTokenException(RefreshTokenException.ErrorCase.NO_ACCESS);
         }
+    }
+
+    private Map<String, Object> checkRefreshToken(String refreshToken)throws RefreshTokenException{
+        try {
+            Map<String, Object> values = jwtUtil.validateToken(refreshToken);
+            return values;
+        }catch (ExpiredJwtException expiredJwtException) {
+            throw new RefreshTokenException(RefreshTokenException.ErrorCase.OLD_REFRESH);
+        }catch (MalformedJwtException malformedJwtException){
+            log.error("MalformedJwtException-----------------------");
+            throw new RefreshTokenException(RefreshTokenException.ErrorCase.NO_REFRESH);
+        }catch (Exception exception){
+            new RefreshTokenException(RefreshTokenException.ErrorCase.NO_REFRESH);
+        }
+        return null;
     }
 
 }
