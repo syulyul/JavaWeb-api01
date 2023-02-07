@@ -43,7 +43,7 @@ public class TodoController {
         return todoService.list(pageRequestDTO);
     }
 
-    @GetMapping(value = "/{tno}")
+    @DeleteMapping(value = "/{tno}")
     public Map<String, String> delete(@PathVariable Long tno){
 
         todoService.remove(tno);
